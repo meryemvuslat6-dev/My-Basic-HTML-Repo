@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Tik Tak To</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Exo 2',sans-serif}
+
+/* ── THEMES ── */
+:root{
+  --bg:#0a0a1a;--surf:#12122a;--acc:#00f5ff;--acc2:#ff00aa;
+  --x-color:#00f5ff;--o-color:#ff00aa;--s-color:#00f5ff;
+  --grid-col:rgba(0,245,255,0.03);
+  --orb1:rgba(0,245,255,0.12);--orb2:rgba(255,0,170,0.10);
+}
+body.theme-cyber{--bg:#0a0a1a;--surf:#12122a;--acc:#00f5ff;--acc2:#ff00aa;--x-color:#00f5ff;--o-color:#ff00aa;--s-color:#00f5ff;--grid-col:rgba(0,245,255,0.03);--orb1:rgba(0,245,255,0.12);--orb2:rgba(255,0,170,0.1)}
+body.theme-nature{--bg:#0a1a08;--surf:#0f2a0c;--acc:#4cff72;--acc2:#ffcc00;--x-color:#4cff72;--o-color:#ffcc00;--s-color:#4cff72;--grid-col:rgba(76,255,114,0.03);--orb1:rgba(76,255,114,0.12);--orb2:rgba(255,204,0,0.10)}
+body.theme-fire{--bg:#1a0600;--surf:#2a0e00;--acc:#ff6b00;--acc2:#ffcc00;--x-color:#ff6b00;--o-color:#ffcc00;--s-color:#ff6b00;--grid-col:rgba(255,107,0,0.04);--orb1:rgba(255,107,0,0.14);--orb2:rgba(255,204,0,0.10)}
+body.theme-ocean{--bg:#020e1a;--surf:#041a2e;--acc:#00b4d8;--acc2:#48cae4;--x-color:#00b4d8;--o-color:#90e0ef;--s-color:#00b4d8;--grid-col:rgba(0,180,216,0.04);--orb1:rgba(0,180,216,0.13);--orb2:rgba(72,202,228,0.10)}
+body.theme-galaxy{--bg:#08001a;--surf:#12002e;--acc:#bf5fff;--acc2:#ff5fdf;--x-color:#bf5fff;--o-color:#ff5fdf;--s-color:#bf5fff;--grid-col:rgba(191,95,255,0.04);--orb1:rgba(191,95,255,0.13);--orb2:rgba(255,95,223,0.10)}
+body.theme-retro{--bg:#1a1200;--surf:#2a1e00;--acc:#f5c518;--acc2:#e05c00;--x-color:#f5c518;--o-color:#e05c00;--s-color:#f5c518;--grid-col:rgba(245,197,24,0.04);--orb1:rgba(245,197,24,0.12);--orb2:rgba(224,92,0,0.10)}
+
+body{background:var(--bg);color:#fff;transition:background .4s}
+
+/* BG */
+.grid-bg{position:fixed;inset:0;z-index:0;
+  background:linear-gradient(var(--grid-col) 1px,transparent 1px),linear-gradient(90deg,var(--grid-col) 1px,transparent 1px);
+  background-size:40px 40px;animation:gridScroll 20s linear infinite}
+@keyframes gridScroll{from{background-position:0 0}to{background-position:40px 40px}}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;transition:background .4s}
+.orb1{width:300px;height:300px;background:var(--orb1);top:-100px;left:-100px;animation:orbFloat 8s ease-in-out infinite}
+.orb2{width:250px;height:250px;background:var(--orb2);bottom:-80px;right:-80px;animation:orbFloat 10s ease-in-out infinite reverse}
+@keyframes orbFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,20px)}}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.screen.active{display:flex}
+
+/* LOGO */
+.logo{font-family:'Orbitron',monospace;font-size:clamp(2rem,9vw,4rem);font-weight:900;
+  text-align:center;margin-bottom:6px;letter-spacing:4px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 20px color-mix(in srgb,var(--acc) 50%,transparent));
+  animation:logoGlow 3s ease-in-out infinite}
+@keyframes logoGlow{0%,100%{filter:drop-shadow(0 0 20px color-mix(in srgb,var(--acc) 50%,transparent))}50%{filter:drop-shadow(0 0 40px color-mix(in srgb,var(--acc2) 70%,transparent))}}
+.logo-sub{color:rgba(255,255,255,0.4);letter-spacing:8px;font-size:.72rem;text-transform:uppercase;margin-bottom:28px;text-align:center}
+
+/* PREVIEW BOARD */
+.preview-board{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:min(160px,36vw);margin-bottom:28px}
+.prev-cell{aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-family:'Orbitron',monospace;font-weight:900}
+
+/* BUTTONS */
+.menu-btn{width:min(250px,84vw);padding:13px;margin:7px;border:none;border-radius:14px;cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;letter-spacing:2px;transition:all .2s;position:relative;overflow:hidden}
+.menu-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s;background:rgba(255,255,255,.1)}
+.menu-btn:active::before{opacity:1}
+.btn-1p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 50%,#00b));color:#000;box-shadow:0 4px 20px color-mix(in srgb,var(--acc) 40%,transparent)}
+.btn-2p{background:linear-gradient(135deg,var(--acc2),color-mix(in srgb,var(--acc2) 50%,#700));color:#fff;box-shadow:0 4px 20px color-mix(in srgb,var(--acc2) 40%,transparent)}
+.btn-sos{background:linear-gradient(135deg,#4caf50,#1b5e20);color:#fff;box-shadow:0 4px 20px rgba(76,175,80,.4)}
+.btn-set{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15)}
+.btn-cred{background:rgba(255,255,255,.05);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1);font-size:.8rem}
+
+/* DIFF BUTTONS */
+.mode-title{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--acc);margin-bottom:20px;letter-spacing:3px;text-align:center}
+.diff-grid{display:flex;flex-direction:column;gap:10px;width:min(260px,90vw);margin-bottom:20px}
+.diff-btn{padding:14px;border:2px solid rgba(255,255,255,.15);border-radius:14px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-family:'Orbitron',monospace;font-size:.85rem;transition:all .2s;text-align:left}
+.diff-btn:hover{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.diff-btn .d-title{font-weight:700;font-size:.95rem;margin-bottom:2px}
+.diff-btn .d-sub{font-size:.68rem;color:rgba(255,255,255,.5);letter-spacing:1px}
+.back-btn{padding:9px 26px;border:1px solid rgba(255,255,255,.2);border-radius:30px;background:transparent;color:rgba(255,255,255,.6);cursor:pointer;font-family:'Exo 2',sans-serif;font-size:.88rem;transition:all .2s;margin-top:4px}
+.back-btn:hover{border-color:var(--acc);color:var(--acc)}
+
+/* GAME HUD */
+.game-hud{display:flex;align-items:center;width:100%;max-width:440px;margin-bottom:12px;gap:8px}
+.hud-btn{padding:8px 14px;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;font-family:'Orbitron',monospace;font-size:.72rem;transition:all .2s}
+.hud-btn:hover{border-color:var(--acc)}
+.turn-badge{flex:1;text-align:center;font-family:'Orbitron',monospace;font-size:.8rem;padding:8px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+
+/* SOS mode pick buttons */
+#sos-pick{display:none;gap:10px;margin-bottom:10px}
+.sos-pick-btn{padding:10px 24px;border:2px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;transition:all .2s}
+.sos-pick-btn:hover{transform:scale(1.08)}
+.sos-pick-btn.s-btn{border-color:var(--acc);color:var(--acc)}
+.sos-pick-btn.o-btn{border-color:var(--acc2);color:var(--acc2)}
+
+/* SCORE */
+.score-row{display:flex;gap:10px;width:100%;max-width:440px;margin-bottom:14px}
+.score-card{flex:1;padding:8px;border-radius:12px;text-align:center;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+.sc-label{font-size:.6rem;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:3px}
+.sc-val{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900}
+.sc-x .sc-val{color:var(--x-color);text-shadow:0 0 20px var(--x-color)}
+.sc-o .sc-val{color:var(--o-color);text-shadow:0 0 20px var(--o-color)}
+.sc-draw .sc-val{color:rgba(255,255,255,.5)}
+
+/* BOARD */
+.board{display:grid;gap:6px;width:min(92vw,92vh,480px)}
+.cell{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;
+  font-family:'Orbitron',monospace;font-weight:900;user-select:none}
+.cell:hover:not(.taken){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.cell.x{color:var(--x-color);text-shadow:0 0 25px var(--x-color);border-color:color-mix(in srgb,var(--x-color) 30%,transparent);background:color-mix(in srgb,var(--x-color) 6%,transparent)}
+.cell.o{color:var(--o-color);text-shadow:0 0 25px var(--o-color);border-color:color-mix(in srgb,var(--o-color) 30%,transparent);background:color-mix(in srgb,var(--o-color) 6%,transparent)}
+.cell.s-mark{color:var(--s-color);text-shadow:0 0 25px var(--s-color);border-color:color-mix(in srgb,var(--s-color) 30%,transparent);background:color-mix(in srgb,var(--s-color) 6%,transparent)}
+.cell.win{animation:winPulse .6s ease-in-out infinite alternate}
+@keyframes winPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+.cell.pop{animation:cellPop .3s cubic-bezier(.36,.07,.19,.97)}
+@keyframes cellPop{0%{transform:scale(.5)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* RESULT */
+#result-overlay{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.85);align-items:center;justify-content:center}
+#result-overlay.show{display:flex}
+.result-box{background:linear-gradient(135deg,var(--bg),var(--surf));border:2px solid var(--acc);border-radius:24px;padding:32px 44px;text-align:center;box-shadow:0 0 60px color-mix(in srgb,var(--acc) 20%,transparent)}
+.r-icon{font-size:3.5rem;margin-bottom:6px}
+.r-title{font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:900;margin-bottom:4px}
+.r-sub{color:rgba(255,255,255,.5);margin-bottom:22px;font-size:.88rem}
+.r-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.r-btn{padding:11px 22px;border:none;border-radius:30px;cursor:pointer;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;transition:all .2s;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+.r-btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.rb-again{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 50%,#00b));color:#000}
+.rb-menu{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+
+/* SOS score */
+.sos-score-row{display:flex;gap:10px;width:100%;max-width:440px;margin-bottom:14px}
+.sos-sc{flex:1;padding:8px;border-radius:12px;text-align:center;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04)}
+.sos-sc-lbl{font-size:.58rem;letter-spacing:2px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:2px}
+.sos-sc-val{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900}
+
+/* SETTINGS */
+#settings-screen{z-index:30;overflow-y:auto}
+.settings-box{background:rgba(10,10,30,.97);border:2px solid var(--acc);border-radius:20px;padding:24px 28px;width:min(360px,94vw);max-height:90vh;overflow-y:auto}
+.settings-title{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--acc);text-align:center;margin-bottom:18px;letter-spacing:3px}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.srow:last-of-type{border-bottom:none}
+.srow.col{flex-direction:column;align-items:flex-start;gap:9px}
+.slbl{color:#fff;font-size:.9rem;font-weight:700}
+.ssub{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:1px}
+.toggle{width:48px;height:26px;border-radius:13px;background:#333;border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--acc)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on::after{left:25px}
+.settings-close{margin-top:14px;width:100%;padding:12px;border:none;border-radius:30px;background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 50%,#00b));color:#000;font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;cursor:pointer}
+
+/* THEME GRID */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.theme-btn{padding:8px 4px;border:2px solid rgba(255,255,255,.12);border-radius:10px;
+  background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-family:'Exo 2',sans-serif;
+  font-size:.72rem;font-weight:700;transition:all .18s;text-align:center}
+.theme-btn.active{border-color:var(--acc);box-shadow:0 0 10px color-mix(in srgb,var(--acc) 30%,transparent)}
+.theme-btn:hover:not(.active){border-color:rgba(255,255,255,.3)}
+.theme-dot{width:20px;height:20px;border-radius:50%;margin:0 auto 4px;border:2px solid rgba(255,255,255,.2)}
+
+/* SIZE & WLEN */
+.size-btns,.wlen-btns{display:flex;gap:7px;width:100%}
+.size-btn,.wlen-btn{flex:1;padding:8px 3px;border:2px solid rgba(255,255,255,.15);border-radius:10px;
+  background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;transition:all .18s}
+.size-btn.active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.wlen-btn.active{border-color:var(--acc2);background:color-mix(in srgb,var(--acc2) 12%,transparent);color:var(--acc2)}
+
+/* CREDITS */
+#credits-screen{z-index:30}
+.credits-box{background:rgba(10,10,30,.97);border:2px solid var(--acc);border-radius:20px;padding:28px 32px;width:min(360px,94vw);text-align:center}
+.credits-title{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--acc);margin-bottom:22px;letter-spacing:3px}
+.credit-item{margin-bottom:18px}
+.c-role{font-size:.65rem;letter-spacing:4px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:3px}
+.c-name{font-family:'Orbitron',monospace;font-size:1.4rem;color:#fff;font-weight:700}
+.c-detail{font-size:.78rem;color:var(--acc);margin-top:3px}
+.c-detail a{color:var(--acc);text-decoration:none}
+.credits-divider{border:none;border-top:1px solid rgba(255,255,255,.1);margin:12px 0}
+.credits-close{margin-top:16px;width:100%;padding:12px;border:none;border-radius:30px;background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 50%,#00b));color:#000;font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body class="theme-cyber">
+<div class="grid-bg"></div>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+
+<!-- ── MENU ── -->
+<div id="menu" class="screen active">
+  <div class="logo">TİK TAK TO</div>
+  <div class="logo-sub">PCMekası Edition</div>
+  <div class="preview-board">
+    <div class="prev-cell" style="color:var(--x-color);text-shadow:0 0 12px var(--x-color)">X</div>
+    <div class="prev-cell" style="color:var(--o-color);text-shadow:0 0 12px var(--o-color)">O</div>
+    <div class="prev-cell" style="color:var(--x-color);text-shadow:0 0 12px var(--x-color)">X</div>
+    <div class="prev-cell" style="color:var(--o-color);text-shadow:0 0 12px var(--o-color)">O</div>
+    <div class="prev-cell" style="color:var(--x-color);text-shadow:0 0 12px var(--x-color)">X</div>
+    <div class="prev-cell"></div>
+    <div class="prev-cell" style="color:var(--o-color);text-shadow:0 0 12px var(--o-color)">O</div>
+    <div class="prev-cell"></div>
+    <div class="prev-cell"></div>
+  </div>
+  <button class="menu-btn btn-1p" onclick="showModeSelect()">🤖 1 Oyuncu (Bot)</button>
+  <button class="menu-btn btn-2p" onclick="startGame('local')">👥 2 Oyuncu (Lokal)</button>
+  <button class="menu-btn btn-sos" onclick="startSOS()">🔤 S-O-S Modu</button>
+  <button class="menu-btn btn-set" onclick="showScreen('settings-screen')">⚙ Ayarlar</button>
+  <button class="menu-btn btn-cred" onclick="showScreen('credits-screen')">👤 Yapımcılar</button>
+</div>
+
+<!-- ── MODE SELECT ── -->
+<div id="mode-screen" class="screen">
+  <div class="mode-title">⚙ ZORLUK SEÇ</div>
+  <div class="diff-grid">
+    <button class="diff-btn" onclick="startGame('easy')">
+      <div class="d-title">😊 Kolay</div><div class="d-sub">Bot rastgele oynuyor</div>
+    </button>
+    <button class="diff-btn" onclick="startGame('medium')">
+      <div class="d-title">🧠 Orta</div><div class="d-sub">Bot bazen hata yapar</div>
+    </button>
+    <button class="diff-btn" onclick="startGame('hard')">
+      <div class="d-title">💀 Zor (Yenilmez)</div><div class="d-sub">Minimax — yenilmez</div>
+    </button>
+  </div>
+  <button class="back-btn" onclick="showScreen('menu')">← Geri</button>
+</div>
+
+<!-- ── GAME ── -->
+<div id="game-screen" class="screen">
+  <div class="game-hud">
+    <button class="hud-btn" onclick="showScreen('menu')">← Menü</button>
+    <div class="turn-badge" id="turn-badge">X'in Hamlesi</div>
+    <button class="hud-btn" onclick="resetBoard()">↺</button>
+  </div>
+  <!-- Normal mode score -->
+  <div class="score-row" id="normal-score-row">
+    <div class="score-card sc-x"><div class="sc-label" id="x-label">X</div><div class="sc-val" id="score-x">0</div></div>
+    <div class="score-card sc-draw"><div class="sc-label">BER.</div><div class="sc-val" id="score-d">0</div></div>
+    <div class="score-card sc-o"><div class="sc-label" id="o-label">O</div><div class="sc-val" id="score-o">0</div></div>
+  </div>
+  <!-- SOS mode score -->
+  <div class="sos-score-row" id="sos-score-row" style="display:none">
+    <div class="sos-sc"><div class="sos-sc-lbl" id="sos-p1-lbl">Oyuncu 1</div><div class="sos-sc-val" id="sos-score-1" style="color:var(--x-color)">0</div></div>
+    <div class="sos-sc"><div class="sos-sc-lbl">SOS</div><div class="sos-sc-val" style="color:rgba(255,255,255,.4)" id="sos-total">0</div></div>
+    <div class="sos-sc"><div class="sos-sc-lbl" id="sos-p2-lbl">Oyuncu 2</div><div class="sos-sc-val" id="sos-score-2" style="color:var(--o-color)">0</div></div>
+  </div>
+  <!-- SOS pick -->
+  <div id="sos-pick">
+    <button class="sos-pick-btn s-btn" onclick="sosPick('S')">S</button>
+    <button class="sos-pick-btn o-btn" onclick="sosPick('O')">O</button>
+  </div>
+  <div class="board" id="board"></div>
+</div>
+
+<!-- ── RESULT ── -->
+<div id="result-overlay">
+  <div class="result-box">
+    <div class="r-icon" id="r-icon">🏆</div>
+    <div class="r-title" id="r-title">X Kazandı!</div>
+    <div class="r-sub" id="r-sub">Tebrikler!</div>
+    <div class="r-btns">
+      <button class="r-btn rb-again" onclick="resetBoard()">↺ Tekrar</button>
+      <button class="r-btn rb-menu" onclick="showScreen('menu')">🏠 Menü</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SETTINGS ── -->
+<div id="settings-screen" class="screen">
+  <div class="settings-box">
+    <div class="settings-title">⚙ AYARLAR</div>
+
+    <!-- THEME -->
+    <div class="srow col">
+      <div><div class="slbl">🎨 Tema</div><div class="ssub">Renk şeması</div></div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+
+    <!-- BOARD SIZE -->
+    <div class="srow col">
+      <div><div class="slbl">🔲 Alan Boyutu</div><div class="ssub">Kaç × Kaç oynansın?</div></div>
+      <div class="size-btns">
+        <button class="size-btn" id="size-3" onclick="setBoardSize(3)">3×3</button>
+        <button class="size-btn" id="size-5" onclick="setBoardSize(5)">5×5</button>
+        <button class="size-btn" id="size-10" onclick="setBoardSize(10)">10×10</button>
+      </div>
+    </div>
+
+    <!-- WIN LENGTH -->
+    <div class="srow col">
+      <div><div class="slbl">🏆 Kazanma Uzunluğu</div><div class="ssub">Kaç ardışık taş?</div></div>
+      <div class="wlen-btns" id="wlen-btns"></div>
+    </div>
+
+    <!-- DIAGONAL -->
+    <div class="srow">
+      <div><div class="slbl">↗ Çapraz Kazanma</div><div class="ssub">Çapraz diziliş geçerli mi?</div></div>
+      <button class="toggle on" id="tog-diag" onclick="togSet('diag')"></button>
+    </div>
+
+    <!-- SFX -->
+    <div class="srow">
+      <div><div class="slbl">🔊 Ses Efektleri</div><div class="ssub">Hamle sesleri</div></div>
