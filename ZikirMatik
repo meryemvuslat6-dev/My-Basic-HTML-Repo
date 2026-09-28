@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Zikirmatik</title>
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:#080b09;
+    color:#fff;
+}
+body{
+    padding:
+      max(14px,env(safe-area-inset-top))
+      max(14px,env(safe-area-inset-right))
+      max(14px,env(safe-area-inset-bottom))
+      max(14px,env(safe-area-inset-left));
+}
+.app{
+    width:100%;
+    max-width:500px;
+    height:100%;
+    margin:auto;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+}
+
+/* ÜST */
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 2px 12px;
+}
+.title{
+    font-size:21px;
+    font-weight:800;
+    letter-spacing:1.5px;
+}
+.settings{
+    width:42px;
+    height:42px;
+    border:1px solid #263029;
+    background:#111612;
+    color:#dce9df;
+    border-radius:14px;
+    font-size:19px;
+}
+
+/* BİLGİLER */
+.info{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+.card{
+    background:linear-gradient(145deg,#121813,#0e120f);
+    border:1px solid #202a23;
+    border-radius:18px;
+    padding:12px 15px;
+}
+.label{
+    color:#829087;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+}
+.value{
+    margin-top:3px;
+    font-size:18px;
+    font-weight:750;
+}
+
+/* ANA ALAN */
+.counter-area{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+.counter{
+    width:100%;
+    text-align:center;
+    font-size:clamp(70px,24vw,125px);
+    line-height:1;
+    font-weight:800;
+    letter-spacing:-5px;
+    color:#f4faf5;
+    font-variant-numeric:tabular-nums;
+    overflow:hidden;
+    padding:5px 0;
+}
+.target-line{
+    margin-top:12px;
+    color:#77837b;
+    font-size:13px;
+}
+.progress{
+    width:min(280px,75%);
+    height:5px;
+    margin-top:12px;
+    background:#1b231e;
+    border-radius:99px;
+    overflow:hidden;
+}
+.progress-bar{
+    width:0%;
+    height:100%;
+    background:#63d68a;
+    border-radius:99px;
+    transition:width .25s ease;
+}
+
+/* ZİKİR BUTONU */
+.zikir-btn{
+    width:min(270px,70vw);
+    height:min(270px,70vw);
+    max-height:270px;
+    max-width:270px;
+    min-width:190px;
+    min-height:190px;
+    border-radius:50%;
+    border:1px solid #77dc98;
+    background:
+      radial-gradient(circle at 35% 25%,#3a8754,#1d4d2e 48%,#102c1a 100%);
+    box-shadow:
+      0 0 0 8px rgba(83,190,119,.05),
+      0 15px 45px rgba(0,0,0,.45),
+      inset 0 2px 12px rgba(255,255,255,.08);
+    color:white;
+    font-size:25px;
+    font-weight:850;
+    letter-spacing:2px;
+    touch-action:manipulation;
+    user-select:none;
+    transition:transform .08s ease,filter .15s ease;
+}
+.zikir-btn:active{
+    transform:scale(.94);
+    filter:brightness(1.15);
+}
+.zikir-btn.pulse{
+    animation:pulse .18s ease;
+}
+@keyframes pulse{
+    50%{transform:scale(.95)}
+}
+
+/* ALT BUTONLAR */
+.controls{
+    display:grid;
+    grid-template-columns:1fr 1.3fr 1fr;
+    gap:9px;
+    padding:14px 0 4px;
+}
+.control{
+    height:53px;
+    border:1px solid #273129;
+    border-radius:16px;
+    background:#111612;
+    color:#e7eee9;
+    font-size:15px;
+    font-weight:700;
+    touch-action:manipulation;
+}
+.control:active{transform:scale(.96)}
+.reset{color:#ffaaa3}
+.target-btn{color:#a9e7bb}
+
+/* MODAL */
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.68);
+    backdrop-filter:blur(8px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:20;
+}
+.modal{
+    width:min(390px,100%);
+    background:#111612;
+    border:1px solid #2b362e;
+    border-radius:24px;
+    padding:22px;
+    box-shadow:0 25px 70px #000;
+}
+.modal h2{
+    margin:0 0 8px;
+    font-size:21px;
+}
+.modal p{
+    margin:0 0 18px;
+    color:#87948b;
+    font-size:14px;
+}
+.input{
+    width:100%;
+    height:53px;
+    border:1px solid #303c34;
+    border-radius:15px;
+    background:#080b09;
+    color:#fff;
+    padding:0 15px;
+    font-size:18px;
+    outline:none;
+}
+.modal-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+    margin-top:13px;
+}
+.modal-buttons button{
+    height:50px;
+    border:0;
+    border-radius:15px;
+    font-weight:750;
+    font-size:15px;
+}
+.cancel{background:#222a24;color:#d8e0da}
+.confirm{background:#3e9b5c;color:#fff}
+
+/* KUTLAMA */
+.celebrate{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:30;
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+.celebrate-box{
+    background:#142219;
+    border:1px solid #63d68a;
+    border-radius:22px;
+    padding:22px 30px;
+    text-align:center;
+    animation:pop .35s ease;
+    box-shadow:0 20px 60px #000;
+}
+.celebrate-box .emoji{font-size:42px}
+.celebrate-box strong{
+    display:block;
+    margin-top:5px;
+    font-size:20px;
+}
+@keyframes pop{
+    from{transform:scale(.7);opacity:0}
+    to{transform:scale(1);opacity:1}
+}
+
+@media(max-height:650px){
+    .zikir-btn{
+        min-width:155px;
+        min-height:155px;
+        width:42vh;
+        height:42vh;
+        font-size:21px;
+    }
+    .counter{font-size:65px}
+    .card{padding:8px 12px}
+    .control{height:47px}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+    <div class="title">ZİKİRMATİK</div>
+    <button class="settings" id="settingsBtn">⚙</button>
+</header>
+
+<div class="info">
+    <div class="card">
+        <div class="label">Hedef</div>
+        <div class="value" id="targetValue">33</div>
+    </div>
+    <div class="card">
+        <div class="label">Toplam Zikir</div>
+        <div class="value" id="totalValue">0</div>
+    </div>
+</div>
+
+<main class="counter-area">
+
+    <div class="counter" id="counter">0</div>
+
+    <div class="target-line">
+        <span id="remainingText">33 zikir kaldı</span>
+    </div>
+
+    <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <button class="zikir-btn" id="zikirBtn">ZİKİR</button>
+
+</main>
+
+<div class="controls">
+    <button class="control" id="minusBtn">−1</button>
+    <button class="control reset" id="resetBtn">Sıfırla</button>
+    <button class="control target-btn" id="plusBtn">+1</button>
+</div>
+
+</div>
+
+<!-- HEDEF MODALI -->
+<div class="overlay" id="targetModal">
+    <div class="modal">
+        <h2>Hedef Belirle</h2>
+        <p>Kaç adet zikir çekmek istediğini gir.</p>
+        <input class="input" id="targetInput" type="number" min="1" inputmode="numeric">
+        <div class="modal-buttons">
+            <button class="cancel" id="cancelTarget">İptal</button>
+            <button class="confirm" id="saveTarget">Kaydet</button>
+        </div>
+    </div>
+</div>
+
+<!-- SIFIRLAMA MODALI -->
+<div class="overlay" id="resetModal">
+    <div class="modal">
+        <h2>Sayaç sıfırlansın mı?</h2>
+        <p>Mevcut zikir sayın sıfırlanacak. Toplam zikir sayısı korunacaktır.</p>
+        <div class="modal-buttons">
+            <button class="cancel" id="cancelReset">Vazgeç</button>
+            <button class="confirm" id="confirmReset">Sıfırla</button>
+        </div>
+    </div>
+</div>
+
+<!-- KUTLAMA -->
+<div class="celebrate" id="celebrate">
+    <div class="celebrate-box">
+        <div class="emoji">🤲</div>
+        <strong>Hedef tamamlandı!</strong>
+    </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let count = Number(localStorage.getItem("zikir_count")) || 0;
+let total = Number(localStorage.getItem("zikir_total")) || 0;
+let target = Number(localStorage.getItem("zikir_target")) || 33;
+
+let lastTap = 0;
+let celebrating = false;
+
+function save(){
+    localStorage.setItem("zikir_count", count);
+    localStorage.setItem("zikir_total", total);
+    localStorage.setItem("zikir_target", target);
+}
+
+function formatNumber(n){
+    return n.toLocaleString("tr-TR");
+}
+
+function update(){
+    $("counter").textContent = formatNumber(count);
+    $("totalValue").textContent = formatNumber(total);
+    $("targetValue").textContent = formatNumber(target);
+
+    const remaining = Math.max(target - count, 0);
+
+    if(count >= target){
+        $("remainingText").textContent = "Hedef tamamlandı";
+    }else{
+        $("remainingText").textContent =
+            formatNumber(remaining) + " zikir kaldı";
+    }
+
+    let percentage = target > 0
+        ? Math.min((count / target) * 100, 100)
+        : 0;
+
+    $("progressBar").style.width = percentage + "%";
+}
+
+function vibrate(){
+    try{
+        if("vibrate" in navigator){
+            navigator.vibrate(12);
+        }
+    }catch(e){}
+}
+
+function addZikir(){
+    const now = Date.now();
+
+    // Çok hızlı çift dokunmayı engelle
+    if(now - lastTap < 70) return;
+    lastTap = now;
+
+    count++;
+    total++;
+
+    vibrate();
+
+    $("zikirBtn").classList.remove("pulse");
+    void $("zikirBtn").offsetWidth;
+    $("zikirBtn").classList.add("pulse");
+
+    save();
+    update();
+
+    if(count === target && !celebrating){
+        showCelebration();
+    }
+}
+
+function minus(){
+    if(count <= 0) return;
+
+    count--;
+    save();
+    update();
+    vibrate();
+}
+
+function plus(){
+    addZikir();
+}
+
+function showCelebration(){
+    celebrating = true;
+
+    const box = $("celebrate");
+    box.style.display = "flex";
+
+    try{
+        if("vibrate" in navigator){
+            navigator.vibrate([40,60,40]);
+        }
+    }catch(e){}
+
+    setTimeout(()=>{
+        box.style.display = "none";
+        celebrating = false;
+    },1800);
+}
+
+/* ZİKİR */
+$("zikirBtn").addEventListener("click", addZikir);
+
+/* −1 */
+$("minusBtn").addEventListener("click", minus);
+
+/* +1 */
+$("plusBtn").addEventListener("click", plus);
+
+/* SIFIRLA */
+$("resetBtn").addEventListener("click", ()=>{
+    $("resetModal").style.display = "flex";
+});
+
+$("cancelReset").addEventListener("click", ()=>{
+    $("resetModal").style.display = "none";
+});
+
+$("confirmReset").addEventListener("click", ()=>{
+    count = 0;
+    save();
+    update();
+    $("resetModal").style.display = "none";
+    vibrate();
+});
+
+/* HEDEF */
+function openTarget(){
+    $("targetInput").value = target;
+    $("targetModal").style.display = "flex";
+
+    setTimeout(()=>{
+        $("targetInput").focus();
+    },100);
+}
+
+$("settingsBtn").addEventListener("click", openTarget);
+
+$("targetValue").parentElement.addEventListener("click", openTarget);
+
+$("cancelTarget").addEventListener("click", ()=>{
+    $("targetModal").style.display = "none";
+});
+
+$("saveTarget").addEventListener("click", ()=>{
+    const value = parseInt($("targetInput").value,10);
+
+    if(!value || value < 1) return;
+
+    target = value;
+    save();
+    update();
+
+    $("targetModal").style.display = "none";
+    vibrate();
+});
+
+$("targetInput").addEventListener("keydown", e=>{
+    if(e.key === "Enter"){
+        $("saveTarget").click();
+    }
+});
+
+/* MODAL DIŞINA TIKLAMA */
+document.querySelectorAll(".overlay").forEach(overlay=>{
+    overlay.addEventListener("click",e=>{
+        if(e.target === overlay){
+            overlay.style.display = "none";
+        }
+    });
+});
+
+/* SAYFAYI KAYDIRMAYI ÖNLE */
+document.addEventListener("touchmove",e=>{
+    if(e.target.closest("button")){
+        e.preventDefault();
+    }
+},{passive:false});
+
+update();
+</script>
+
+</body>
+</html>
