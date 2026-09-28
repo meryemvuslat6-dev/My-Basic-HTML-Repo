@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>TETRIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#111118; --bg2:#18181f; --bg3:#1e1e28;
+  --c1:#5eb8ff; --c2:#ff5f8a; --c3:#a66cff;
+  --c4:#4dffb0; --c5:#ffd166; --c6:#ff8c42; --c7:#7eceff;
+  --acc:var(--c1); --acc2:var(--c2);
+  --border:#334; --btn:#ffffff0f;
+  --text:#c8d8f0; --dim:#556;
+}
+/* PALETler — tüm renkler eksiksiz tanımlı */
+.pal-lime {
+  --c1:#00cc00;--c2:#00ff44;--c3:#009900;--c4:#00ee00;--c5:#33ff33;--c6:#007700;--c7:#00bb00;
+  --acc:#00cc00;--acc2:#00ff44;--border:#006600;--dim:#009900;
+  --bg:#002200;--bg2:#003300;--bg3:#004400;
+}
+.pal-violet {
+  --c1:#cc0000;--c2:#ff2200;--c3:#aa0000;--c4:#ee0000;--c5:#ff4444;--c6:#880000;--c7:#bb0000;
+  --acc:#cc0000;--acc2:#ff2200;--border:#660000;--dim:#990000;
+  --bg:#220000;--bg2:#330000;--bg3:#440000;
+}
+.pal-gold {
+  --c1:#ffcc00;--c2:#ffaa00;--c3:#ff8800;--c4:#ffdd00;--c5:#ffee44;--c6:#dd6600;--c7:#ffbb00;
+  --acc:#ffcc00;--acc2:#ffaa00;--border:#886600;--dim:#aa8800;
+  --bg:#221500;--bg2:#332000;--bg3:#442a00;
+}
+.pal-mid {
+  --c1:#0066ff;--c2:#0099ff;--c3:#0044cc;--c4:#0077ff;--c5:#44aaff;--c6:#0033aa;--c7:#0055dd;
+  --acc:#0066ff;--acc2:#0099ff;--border:#003388;--dim:#0055aa;
+  --bg:#000e2a;--bg2:#001540;--bg3:#001c55;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:var(--bg);
+  font-family:'Press Start 2P',monospace;
+  touch-action:none;
+  user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;transition:opacity .22s;}
+.screen.hidden{opacity:0;pointer-events:none;}
+
+/* MENU */
+#menuScreen{background:var(--bg);gap:12px;}
+.menu-logo{font-size:clamp(24px,7vw,42px);color:var(--acc);letter-spacing:6px;animation:pulse 2s infinite;}
+.menu-prev{display:grid;grid-template-columns:repeat(10,clamp(13px,2.6vw,20px));grid-template-rows:repeat(4,clamp(13px,2.6vw,20px));gap:2px;margin-bottom:2px;}
+.mpc{border-radius:2px;}
+.menu-list{display:flex;flex-direction:column;gap:7px;width:min(88vw,300px);}
+.mi{display:flex;align-items:center;gap:9px;padding:10px 13px;background:var(--btn);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-size:clamp(8px,2.3vw,11px);cursor:pointer;transition:border-color .12s,transform .1s;}
+.mi:active,.mi.focused{border-color:var(--acc);transform:scale(.97);}
+.mi-ic{width:18px;height:18px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;flex-shrink:0;}
+.mi-dot{border-radius:2px;}
+.mi-arr{margin-left:auto;color:var(--acc);opacity:0;}
+.mi.focused .mi-arr{opacity:1;}
+
+/* SUB */
+#subScreen{background:var(--bg);gap:12px;padding:18px;}
+.sub-title{color:var(--acc);font-size:clamp(9px,2.6vw,13px);letter-spacing:3px;}
+.sub-list{display:flex;flex-direction:column;gap:6px;width:min(88vw,300px);max-height:52vh;overflow-y:auto;}
+.si{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--btn);border:1.5px solid var(--border);border-radius:5px;color:var(--text);font-size:clamp(7px,1.9vw,10px);cursor:pointer;transition:transform .1s;}
+.si:active{transform:scale(.97);}
+.si.sel{border-color:var(--acc);color:var(--acc);}
+.psw{display:flex;gap:3px;}
+.ps{width:11px;height:11px;border-radius:2px;}
+.sub-back{color:var(--acc2);font-size:clamp(7px,2vw,9px);cursor:pointer;padding:8px;margin-top:4px;}
+.sub-back:active{opacity:.6;}
+
+/* ABOUT SCREEN */
+#aboutScreen{background:var(--bg);gap:14px;padding:20px;text-align:center;}
+.about-logo{font-size:clamp(18px,5vw,30px);color:var(--acc);letter-spacing:5px;animation:pulse 2s infinite;margin-bottom:4px;}
+.about-box{width:min(88vw,300px);background:var(--btn);border:1.5px solid var(--border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.about-row{display:flex;flex-direction:column;gap:5px;align-items:center;}
+.about-lbl{color:var(--dim);font-size:6px;letter-spacing:2px;}
+.about-val{color:var(--text);font-size:clamp(7px,2vw,10px);}
+.about-link{color:var(--acc);font-size:clamp(6px,1.7vw,9px);text-decoration:none;word-break:break-all;line-height:1.6;}
+.about-div{width:100%;height:1px;background:var(--border);}
+.about-back{color:var(--acc2);font-size:clamp(7px,2vw,9px);cursor:pointer;padding:8px;margin-top:2px;}
+.about-back:active{opacity:.6;}
+
+/* GAME SCREEN */
+#gameScreen{background:var(--bg2);justify-content:flex-start;padding:0;gap:0;}
+
+/* HUD */
+.hud{width:100%;flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;padding:4px 10px;background:var(--bg);border-bottom:1px solid var(--border);}
+.hb{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.hl{color:var(--dim);font-size:6px;}
+.hv{color:var(--acc);font-size:clamp(8px,2.1vw,11px);}
+.hud-icons{display:flex;gap:5px;align-items:center;}
+.hic{font-size:13px;cursor:pointer;opacity:.7;padding:2px;}
+.hic:active{opacity:.35;}
+.hic.off{opacity:.22;text-decoration:line-through;}
+.hud-pause{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:13px;cursor:pointer;background:var(--btn);}
+.hud-pause:active{transform:scale(.88);}
+/* FPS counter */
+#fpsDisplay{color:var(--dim);font-size:6px;min-width:28px;text-align:center;line-height:1;}
+
+/* PLAY AREA */
+.play-area{flex:1 1 0;min-height:0;display:flex;align-items:stretch;justify-content:center;padding:3px 4px;gap:4px;overflow:hidden;}
+.board-wrap{position:relative;flex-shrink:0;border:1.5px solid var(--border);border-radius:3px;overflow:hidden;background:#0a0a10;}
+#gc{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
+.side-col{display:flex;flex-direction:column;gap:5px;width:clamp(62px,15vw,88px);flex-shrink:0;padding-top:2px;}
+.pbox{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px;}
+.pbox-lbl{color:var(--dim);font-size:5px;text-align:center;margin-bottom:3px;}
+#nc,#hc{display:block;margin:0 auto;}
+
+/* DPAD */
+.dpad-wrap{width:100%;flex:0 0 auto;background:var(--bg);border-top:1px solid var(--border);padding:4px 8px 5px;display:flex;flex-direction:column;gap:3px;}
+.dpad{display:grid;grid-template-areas:". u ." "l . r" ". d .";grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr;gap:3px;}
+.cb{display:flex;align-items:center;justify-content:center;background:var(--btn);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:clamp(16px,4.2vw,22px);cursor:pointer;transition:transform .08s,background .08s;}
+.cb:active,.cb.pr{transform:scale(.86);background:rgba(255,255,255,0.13);}
+[data-a="left"]{grid-area:l;}[data-a="up"]{grid-area:u;}[data-a="right"]{grid-area:r;}[data-a="down"]{grid-area:d;}
+.act-row{display:flex;gap:5px;}
+.ab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--btn);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:5px;cursor:pointer;transition:transform .08s,background .08s;padding:5px 2px;}
+.ab-icon{font-size:clamp(13px,3.8vw,19px);}
+.ab:active,.ab.pr{transform:scale(.88);background:rgba(255,255,255,0.12);}
+.ab-rot{border-color:#ff5f8a;color:#ff5f8a;}
+.ab-drop{border-color:#4dffb0;color:#4dffb0;}
+.ab-hold{border-color:#ffd166;color:#ffd166;}
+
+/* MESSAGES */
+#omsg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(8,8,18,.92);border:2px solid var(--acc);border-radius:8px;padding:11px 18px;text-align:center;pointer-events:none;z-index:50;transition:transform .2s cubic-bezier(.175,.885,.32,1.275);}
+#omsg.show{transform:translate(-50%,-50%) scale(1);}
+.om-main{color:var(--acc2);font-size:clamp(9px,2.8vw,15px);margin-bottom:5px;}
+.om-sub{color:var(--acc);font-size:clamp(7px,2vw,10px);}
+#ctxt{position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;z-index:51;font-size:clamp(9px,2.4vw,13px);color:var(--acc2);text-align:center;opacity:0;white-space:nowrap;}
+@keyframes canim{0%{opacity:0;transform:translateX(-50%) translateY(0) scale(.5);}20%{opacity:1;transform:translateX(-50%) translateY(-10px) scale(1.2);}80%{opacity:1;transform:translateX(-50%) translateY(-26px) scale(1);}100%{opacity:0;transform:translateX(-50%) translateY(-42px) scale(.8);}}
+#lvlb{position:fixed;top:26%;left:50%;transform:translateX(-50%) scale(0);background:rgba(8,8,18,.93);border:2px solid var(--c4);border-radius:7px;padding:10px 16px;color:var(--c4);font-size:clamp(9px,2.5vw,13px);z-index:70;pointer-events:none;text-align:center;transition:transform .26s cubic-bezier(.175,.885,.32,1.275);white-space:nowrap;}
+#lvlb.show{transform:translateX(-50%) scale(1);}
+
+/* PAUSE / GO */
+#pauseScreen{background:rgba(0,0,0,.88);gap:14px;padding:20px;}
+.pause-title{color:var(--acc);font-size:clamp(11px,3.8vw,19px);letter-spacing:3px;animation:pulse 1.5s infinite;}
+#gameOverScreen{background:rgba(0,0,0,.94);gap:13px;padding:20px;text-align:center;}
+.go-title{color:var(--c2);font-size:clamp(12px,4.5vw,24px);animation:shk .4s ease;}
+.go-score{color:var(--text);font-size:clamp(7px,2.1vw,11px);line-height:2.1;}
+.go-score span{color:var(--acc);}
+.go-btn{padding:10px 16px;background:var(--btn);border:1.5px solid var(--border);border-radius:7px;color:var(--text);font-size:clamp(7px,2vw,10px);cursor:pointer;min-width:min(78vw,230px);text-align:center;}
+.go-btn:active{transform:scale(.95);}
+
+/* ANIMATIONS */
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+@keyframes shk{0%,100%{transform:translateX(0);}15%,55%{transform:translateX(-5px);}35%,75%{transform:translateX(5px);}}
+@keyframes bshk{0%,100%{transform:translate(0,0);}10%{transform:translate(-4px,-3px);}20%{transform:translate(4px,3px);}30%{transform:translate(-3px,4px);}40%{transform:translate(3px,-4px);}50%{transform:translate(-5px,2px);}60%{transform:translate(5px,-2px);}70%{transform:translate(-2px,5px);}80%{transform:translate(2px,-5px);}90%{transform:translate(-3px,3px);}}
+.bshk{animation:bshk .42s cubic-bezier(.36,.07,.19,.97) both;}
+
+#gameScreen::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:5;background:repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 3px);}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- MENU (tap ekranı yok, direkt açılır) -->
+<div id="menuScreen" class="screen">
+  <div class="menu-logo">TETRIS</div>
+  <div id="menuPrev" class="menu-prev"></div>
+  <div class="menu-list">
+    <div class="mi" data-a="start">
+      <div class="mi-ic"><div class="mi-dot" style="background:#5eb8ff"></div><div class="mi-dot" style="background:#ff5f8a"></div><div class="mi-dot" style="background:#4dffb0"></div><div class="mi-dot" style="background:#ffd166"></div></div>
+      <span id="mStart">OYNA</span><span class="mi-arr">▶</span>
+    </div>
+    <div class="mi" data-a="diff">
+      <div class="mi-ic"><div class="mi-dot" style="background:#4dffb0"></div><div class="mi-dot" style="background:#ffd166"></div><div class="mi-dot" style="background:#ff5f8a"></div><div class="mi-dot" style="background:#ff5f8a"></div></div>
+      <span id="mDiff">ZORLUK</span><span class="mi-arr">▶</span>
+    </div>
+    <div class="mi" data-a="palette">
+      <div class="mi-ic"><div class="mi-dot" style="background:#b0ff30"></div><div class="mi-dot" style="background:#c060ff"></div><div class="mi-dot" style="background:#ffcc00"></div><div class="mi-dot" style="background:#5588ff"></div></div>
+      <span id="mPal">RENKLER</span><span class="mi-arr">▶</span>
+    </div>
+    <div class="mi" data-a="lang">
+      <div class="mi-ic"><div class="mi-dot" style="background:#5588ff"></div><div class="mi-dot" style="background:#5588ff"></div><div class="mi-dot" style="background:#5588ff"></div><div class="mi-dot" style="background:#5588ff"></div></div>
+      <span id="mLang">DİL</span><span class="mi-arr">▶</span>
+    </div>
+    <div class="mi" data-a="settings">
+      <div class="mi-ic"><div class="mi-dot" style="background:#a66cff"></div><div class="mi-dot" style="background:#a66cff"></div><div class="mi-dot" style="background:#a66cff"></div><div class="mi-dot" style="background:#a66cff"></div></div>
+      <span id="mSet">AYARLAR</span><span class="mi-arr">▶</span>
+    </div>
+    <div class="mi" data-a="about">
+      <div class="mi-ic"><div class="mi-dot" style="background:#ffd166"></div><div class="mi-dot" style="background:#ff8c42"></div><div class="mi-dot" style="background:#ffd166"></div><div class="mi-dot" style="background:#ff8c42"></div></div>
+      <span id="mAbout">HAKKINDA</span><span class="mi-arr">▶</span>
+    </div>
+  </div>
+</div>
+
+<!-- SUB -->
+<div id="subScreen" class="screen hidden">
+  <div class="sub-title" id="subTitle"></div>
+  <div class="sub-list" id="subList"></div>
+  <div class="sub-back" id="subBack">◀ GERİ</div>
+</div>
+
+<!-- ABOUT -->
+<div id="aboutScreen" class="screen hidden">
+  <div class="about-logo">TETRIS</div>
+  <div class="about-box">
+    <div class="about-row">
+      <div class="about-lbl">YAPIMCI</div>
+      <div class="about-val">PCMekası</div>
+    </div>
+    <div class="about-div"></div>
+    <div class="about-row">
+      <div class="about-lbl">SİTE</div>
+      <a class="about-link" href="https://pcmekasiyt.blogspot.com" target="_blank">pcmekasiyt.blogspot.com</a>
+    </div>
+    <div class="about-div"></div>
+    <div class="about-row">
+      <div class="about-lbl">YOUTUBE</div>
+      <a class="about-link" href="https://youtube.com/@PCMekasiOffical" target="_blank">@PCMekasiOffical</a>
+    </div>
+  </div>
+  <div class="about-back" id="aboutBack">◀ GERİ</div>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen" class="screen hidden">
+  <div class="hud">
+    <div class="hb"><div class="hl" id="hSL">SKOR</div><div class="hv" id="hS">0</div></div>
+    <div class="hb"><div class="hl" id="hLL">SEVİYE</div><div class="hv" id="hL">1</div></div>
+    <div class="hb"><div class="hl" id="hNL">SATIR</div><div class="hv" id="hN">0</div></div>
+    <div class="hb"><div class="hl" id="hHL">REKOR</div><div class="hv" id="hH">0</div></div>
+    <div class="hud-icons">
+      <div class="hb"><div class="hl">FPS</div><div id="fpsDisplay">--</div></div>
+      <div class="hic" id="btnM">🎵</div>
+      <div class="hic" id="btnSX">🔊</div>
+    </div>
+    <div class="hud-pause" id="btnP">⏸</div>
+  </div>
+  <div class="play-area">
+    <div class="board-wrap" id="bw">
+      <canvas id="gc"></canvas>
+      <div id="omsg"><div class="om-main" id="omM"></div><div class="om-sub" id="omS"></div></div>
+      <div id="ctxt"></div>
+    </div>
+    <div class="side-col">
+      <div class="pbox"><div class="pbox-lbl" id="lNx">SONRAKI</div><canvas id="nc"></canvas></div>
+      <div class="pbox"><div class="pbox-lbl" id="lHd">BEKLE</div><canvas id="hc"></canvas></div>
+    </div>
+  </div>
+  <div class="dpad-wrap">
+    <div class="dpad" id="dpadGrid">
+      <div class="cb" data-a="up">↻</div>
+      <div class="cb" data-a="left">◀</div>
+      <div class="cb" data-a="right">▶</div>
+      <div class="cb" data-a="down">▼</div>
+    </div>
+    <div class="act-row">
+      <div class="ab ab-hold" data-a="hold"><span class="ab-icon">📦</span><span id="lHB">BEKLET</span></div>
+      <div class="ab ab-drop" data-a="drop"><span class="ab-icon">⬇</span><span id="lDB">DÜŞÜR</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAUSE -->
+<div id="pauseScreen" class="screen hidden">
+  <div class="pause-title" id="lPause">— DURAKLADI —</div>
+  <div class="menu-list" style="margin-top:10px;width:min(78vw,270px);">
+    <div class="mi" id="resumeBtn"><span id="lRes">DEVAM</span></div>
+    <div class="mi" id="pmenuBtn"><span id="lPM">MENÜ</span></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOverScreen" class="screen hidden">
+  <div class="go-title" id="goT">GAME OVER</div>
+  <div class="go-score" id="goSc"></div>
+  <div class="go-btn" id="goRe" style="margin-top:8px;"></div>
+  <div class="go-btn" id="goMn" style="margin-top:5px;"></div>
+</div>
+
+<div id="lvlb"></div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────
+const COLS=10,ROWS=20;
+let CELL=22;
+
+// ─── LANGUAGE ────────────────────────────────────
+const L_DATA={
+  tr:{play:'OYNA',pal:'RENKLER',lang:'DİL',set:'AYARLAR',about:'HAKKINDA',diff:'ZORLUK',score:'SKOR',lvl:'SEVİYE',lines:'SATIR',hi:'REKOR',next:'SONRAKI',hold:'BEKLE',pause:'— DURAKLADI —',resume:'DEVAM',pmenu:'MENÜ',hBtn:'BEKLET',rBtn:'DÖNDÜR',dBtn:'DÜŞÜR',goT:['BİTTİ BU İŞ!','RACON KESİLDİ!','ELEYİP GEÇTİK!','CANIN SAĞOLSUN!'],goSc:'SKOR:',goHi:'REKOR:',restart:'TEKRAR OYNA',back:'MENÜYE DÖN',tet:['KRAL GELDİ!','DÖRT TAM DÖRT!','EFSONEVİ!','TAM İSABET!'],tri:['ÜÇLÜ KOMBO!','ÜÇÜ BİRDEN!'],dbl:['ÇİFT ATLI!','İKİ BİRDEN!'],sng:['GÜZEEELDİ!','TEMIZ!'],lup:['SEVİYE ATLADI!','ZORLAŞIYOR!','HADİ BAKALIM!'],sLang:'DİL SEÇİMİ',sPal:'RENK PALETİ',sSet:'AYARLAR',sDiff:'ZORLUK SEÇİMİ',dEasy:'KOLAY',dNorm:'NORMAL',dHard:'ZOR',lName:'TÜRKÇE',mus:'MÜZİK',sfxl:'SES EFEKTİ',fps:'FPS SAYAÇ',bk:'◀ GERİ'},
+  en:{play:'PLAY',pal:'COLORS',lang:'LANGUAGE',set:'SETTINGS',about:'ABOUT',diff:'DIFFICULTY',score:'SCORE',lvl:'LEVEL',lines:'LINES',hi:'BEST',next:'NEXT',hold:'HOLD',pause:'— PAUSED —',resume:'RESUME',pmenu:'MENU',hBtn:'HOLD',rBtn:'ROTATE',dBtn:'DROP',goT:["GAME OVER!","YOU'RE DONE!","NICE TRY!","SO CLOSE!"],goSc:'SCORE:',goHi:'BEST:',restart:'PLAY AGAIN',back:'MAIN MENU',tet:['TETRIS!','FOUR LINES!','INCREDIBLE!','PERFECT!'],tri:['TRIPLE!','3 LINES!'],dbl:['DOUBLE!','2 LINES!'],sng:['NICE!','CLEARED!'],lup:['LEVEL UP!','FASTER!','CAN YOU KEEP UP?'],sLang:'LANGUAGE',sPal:'COLOR PALETTE',sSet:'SETTINGS',sDiff:'DIFFICULTY',dEasy:'EASY',dNorm:'NORMAL',dHard:'HARD',lName:'ENGLISH',mus:'MUSIC',sfxl:'SFX',fps:'FPS COUNTER',bk:'◀ BACK'},
+  ru:{play:'ИГРАТЬ',pal:'ЦВЕТА',lang:'ЯЗЫК',set:'НАСТРОЙКИ',about:'О НАС',diff:'СЛОЖНОСТЬ',score:'ОЧКИ',lvl:'УРОВЕНЬ',lines:'ЛИНИИ',hi:'РЕКОРД',next:'СЛЕД.',hold:'СТОП',pause:'— ПАУЗА —',resume:'ПРОДОЛЖИТЬ',pmenu:'МЕНЮ',hBtn:'СТОП',rBtn:'ВРАШАТЬ',dBtn:'ПАДАТЬ',goT:['ИГРА ОКОНЧЕНА!','ВОТ И ВСЁ!','МОЛОДЕЦ!','ТАК БЛИЗКО!'],goSc:'ОЧКИ:',goHi:'РЕКОРД:',restart:'ЕЩЁ РАЗ',back:'МЕНЮ',tet:['ТЕТРИС!','ЧЕТЫРЕ!','НЕВЕРОЯТНО!','ОТЛИЧНО!'],tri:['ТРОЙНОЙ!','3 ЛИНИИ!'],dbl:['ДВОЙНОЙ!','2 ЛИНИИ!'],sng:['ОТЛИЧНО!','УБРАНО!'],lup:['УРОВЕНЬ!','БЫСТРЕЕ!','НУ КАК?'],sLang:'ЯЗЫК',sPal:'ЦВЕТ ПАЛИТРА',sSet:'НАСТРОЙКИ',sDiff:'СЛОЖНОСТЬ',dEasy:'ЛЁГКИЙ',dNorm:'НОРМАЛЬНЫЙ',dHard:'СЛОЖНЫЙ',lName:'РУССКИЙ',mus:'МУЗЫКА',sfxl:'ЗВУКИ',fps:'СЧЁТЧИК FPS',bk:'◀ НАЗАД'},
+};
+let curLang='tr';
+let curDiff='normal';
+const Lx=()=>L_DATA[curLang];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+
+// ─── FPS ─────────────────────────────────────────
+let fpsOn=false;
+let fpsFrames=0,fpsLast=performance.now(),fpsVal=0;
+function tickFps(ts){
+  fpsFrames++;
+  if(ts-fpsLast>=1000){
+    fpsVal=fpsFrames;fpsFrames=0;fpsLast=ts;
+    if(fpsOn) document.getElementById('fpsDisplay').textContent=fpsVal;
+  }
+}
+function setFpsDisplay(on){
+  fpsOn=on;
+  const el=document.getElementById('fpsDisplay');
+  el.style.display=on?'block':'none';
+  el.textContent='--';
+}
+
+// ─── PALETTE ─────────────────────────────────────
+const PAL={
+  default:['#5eb8ff','#2266ff','#ff8c42','#ffd166','#4dffb0','#a66cff','#ff5f8a'],
+  lime:   ['#b0ff30','#00ffc8','#ffff44','#aaff00','#00ffaa','#ff7700','#30ffcc'],
+  violet: ['#c060ff','#ff50e0','#6020ff','#dd44ff','#ff50e0','#ff1060','#a030ff'],
+  gold:   ['#ffcc00','#ff5500','#ffaa00','#ffe600','#ffdd44','#ff4400','#ffaa44'],
+  mid:    ['#5588ff','#00d4ff','#3300ff','#44aaff','#00d4ff','#0099ff','#3366ff'],
+};
+let curPal='default';
+const getC=()=>
