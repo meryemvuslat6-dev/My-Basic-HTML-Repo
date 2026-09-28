@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>64 Kare Satranç</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+body.ocean { --bg:#020c1b;--surf:#0a1628;--acc:#0ea5e9;--lsq:#1e4d7a;--dsq:#0c2a45;--hl:rgba(56,189,248,.52);--dot:rgba(56,189,248,.28);--tx:#bae6fd;--mu:#4a7a9b;--br:#0e2a45;--bb:#0c2240;--bh:#1e4d7a;--mbg:linear-gradient(135deg,#020c1b,#041830,#020c1b); }
+body.brown { --bg:#1a0f07;--surf:#2a1a0e;--acc:#d97706;--lsq:#f0d9b5;--dsq:#b58863;--hl:rgba(245,158,11,.52);--dot:rgba(245,158,11,.28);--tx:#fef3c7;--mu:#8a6a3a;--br:#3d2b1a;--bb:#3d2b1a;--bh:#5c3d22;--mbg:linear-gradient(135deg,#1a0f07,#2e1a0a,#1a0f07); }
+body.white { --bg:#f0f4ff;--surf:#ffffff;--acc:#6366f1;--lsq:#e8edf5;--dsq:#94a3b8;--hl:rgba(99,102,241,.42);--dot:rgba(99,102,241,.2);--tx:#1e293b;--mu:#94a3b8;--br:#e2e8f0;--bb:#e2e8f0;--bh:#cbd5e1;--mbg:linear-gradient(135deg,#eef2ff,#ffffff,#eef2ff); }
+body.black { --bg:#000;--surf:#0d0d0d;--acc:#00ff88;--lsq:#1c1c1c;--dsq:#080808;--hl:rgba(0,255,136,.42);--dot:rgba(0,255,136,.2);--tx:#00ff88;--mu:#00884a;--br:#1a1a1a;--bb:#0d0d0d;--bh:#1a1a1a;--mbg:linear-gradient(135deg,#000,#111,#000); }
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'Rajdhani',sans-serif;transition:background .4s,color .4s}
+
+#ptcl{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ptcl{position:absolute;border-radius:50%;background:var(--acc);opacity:.12;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(105vh);opacity:0}10%{opacity:.12}90%{opacity:.12}100%{transform:translateY(-5vh);opacity:0}}
+
+.scr{position:fixed;inset:0;z-index:1;overflow-y:auto;overflow-x:hidden}
+
+/* MENU */
+#menu{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:20px;background:var(--mbg)}
+.logo{text-align:center;margin-bottom:28px}
+.logo-icon{font-size:3.6rem;filter:drop-shadow(0 0 18px var(--acc));display:block;margin-bottom:6px}
+.logo-title{font-family:'Cinzel',serif;font-size:clamp(1.5rem,5vw,2.4rem);font-weight:900;background:linear-gradient(135deg,var(--acc),var(--tx));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.logo-sub{font-size:.78rem;letter-spacing:5px;color:var(--mu);margin-top:4px;text-transform:uppercase}
+.mcard{background:var(--surf);border:1px solid var(--br);border-radius:18px;padding:26px 30px;width:min(420px,95vw);box-shadow:0 0 50px rgba(0,0,0,.5)}
+.msec{margin-bottom:20px}
+.msec h3{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:4px;color:var(--mu);text-transform:uppercase;margin-bottom:11px;border-bottom:1px solid var(--br);padding-bottom:6px}
+.cpick{display:flex;gap:8px;flex-wrap:wrap}
+.cbtn{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:9px;border:2px solid transparent;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.86rem;font-weight:600;transition:all .2s;background:var(--bb);color:var(--tx)}
+.cbtn:hover,.cbtn.active{border-color:var(--acc)}
+.cbtn.active{background:var(--bh)}
+.cdot{width:11px;height:11px;border-radius:50%}
+.mbtn{width:100%;padding:12px;border-radius:11px;border:none;cursor:pointer;font-family:'Cinzel',serif;font-size:.92rem;font-weight:700;letter-spacing:2px;transition:all .2s;margin-bottom:8px}
+.mbtn.pri{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 65%,white));color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+.mbtn.pri:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.mbtn.sec{background:var(--bb);color:var(--tx);border:1px solid var(--br)}
+.mbtn.sec:hover{background:var(--bh);border-color:var(--acc)}
+.mrow{display:flex;gap:9px}
+.mrow .mbtn{flex:1;margin:0}
+.diff-row{display:flex;gap:8px;margin-top:8px}
+.diff-btn{flex:1;padding:9px 6px;border-radius:10px;border:2px solid var(--br);background:var(--bb);color:var(--tx);cursor:pointer;font-family:'Cinzel',serif;font-size:.78rem;font-weight:700;letter-spacing:1px;transition:all .2s;text-align:center}
+.diff-btn:hover{border-color:var(--acc)}
+.diff-btn.active{border-color:var(--acc);background:var(--bh);color:var(--acc)}
+
+/* GAME */
+#game{display:none;flex-direction:column;height:100%;padding:8px 10px 6px}
+.hud{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-shrink:0}
+.hbtn{padding:7px 13px;border-radius:9px;border:1px solid var(--br);background:var(--surf);color:var(--tx);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:600;transition:all .2s;white-space:nowrap}
+.hbtn:hover{border-color:var(--acc);color:var(--acc)}
+.tbadge{padding:7px 10px;border-radius:9px;background:var(--bb);border:1px solid var(--acc);font-family:'Cinzel',serif;font-size:.76rem;letter-spacing:1px;flex:1;text-align:center;min-width:0;overflow:hidden}
+.fpsbadge{padding:5px 11px;border-radius:8px;background:var(--bb);border:1px solid var(--br);font-size:.78rem;color:var(--mu);min-width:68px;text-align:center;display:none}
+.fpsbadge.on{color:var(--acc);border-color:var(--acc);display:block}
+.fpsbadge-menu{margin-top:8px;display:none;font-size:.75rem;color:var(--mu);letter-spacing:2px}
+.fpsbadge-menu.on{display:block;color:var(--acc)}
+.garea{display:flex;gap:10px;flex:1;min-height:0;align-items:center;justify-content:center}
+
+/* Side panels - desktop */
+.spanel{display:flex;flex-direction:column;gap:8px;width:175px;flex-shrink:0}
+@media(max-width:800px){.spanel{display:none}}
+.pcard{background:var(--surf);border:1px solid var(--br);border-radius:12px;padding:12px}
+.pcard h4{font-family:'Cinzel',serif;font-size:.62rem;letter-spacing:3px;color:var(--mu);text-transform:uppercase;margin-bottom:8px}
+.pinfo{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pav{width:30px;height:30px;border-radius:50%;background:var(--bb);border:2px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.pname{font-weight:700;font-size:.88rem}
+.prat{font-size:.73rem;color:var(--mu)}
+.ptimer{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;text-align:center;padding:6px;border-radius:7px;background:var(--bb);letter-spacing:2px;border:1px solid transparent;transition:all .3s}
+.ptimer.active{color:var(--acc);border-color:var(--acc)}
+.movelist{max-height:150px;overflow-y:auto;font-size:.78rem}
+.movelist::-webkit-scrollbar{width:3px}
+.movelist::-webkit-scrollbar-thumb{background:var(--br)}
+.mrow2{display:flex;gap:4px;padding:2px 0;border-bottom:1px solid var(--br)}
+.mnum{color:var(--mu);width:18px;flex-shrink:0;font-size:.75rem}
+.mw,.mb{flex:1;padding:1px 3px;border-radius:3px}
+.capt-row{display:flex;flex-wrap:wrap;gap:2px;min-height:22px;font-size:.95rem}
+
+/* Board center */
+.bcenter{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+
+/* Mobile player strips */
+.mstrip{display:none;align-items:center;justify-content:space-between;width:100%;margin-bottom:5px;padding:6px 10px;background:var(--surf);border-radius:10px;border:1px solid var(--br)}
+.mstrip.bot{margin-bottom:0;margin-top:5px}
+@media(max-width:800px){.mstrip{display:flex}}
+.mpleft{display:flex;align-items:center;gap:8px}
+.mpname{font-weight:700;font-size:.88rem}
+.mprat{font-size:.72rem;color:var(--mu)}
+.mptimer{font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--bb);border:1px solid transparent;letter-spacing:1px;transition:all .3s}
+.mptimer.active{color:var(--acc);border-color:var(--acc)}
+
+/* Board */
+.bwrap{display:flex;align-items:flex-start}
+.rlabels{display:flex;flex-direction:column;margin-right:3px}
+.rlbl{display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--mu)}
+.flabels{display:flex;margin-top:2px}
+.flbl{text-align:center;font-size:.6rem;color:var(--mu)}
+
+#board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid var(--acc);border-radius:3px;overflow:hidden;box-shadow:0 0 28px rgba(0,0,0,.6);position:relative;cursor:default}
+.sq{display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;user-select:none;-webkit-user-select:none;touch-action:none}
+.sq.light{background:var(--lsq)}
+.sq.dark{background:var(--dsq)}
+.sq.sel{background:var(--hl)!important}
+.sq.lm{outline:3px solid var(--acc);outline-offset:-3px;z-index:1}
+.sq.chk{background:rgba(220,38,38,.65)!important}
+.sq.can::after{content:'';position:absolute;width:30%;height:30%;border-radius:50%;background:var(--dot);pointer-events:none;z-index:2}
+.sq.can.occ::after{width:100%;height:100%;border-radius:0;background:var(--dot)}
+.piece{line-height:1;pointer-events:none;filter:drop-shadow(1px 2px 3px rgba(0,0,0,.7));position:relative;z-index:3;transition:opacity .1s}
+.piece.dragging-src{opacity:.35}
+
+/* Drag ghost */
+#drag-ghost{position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);display:none;line-height:1;filter:drop-shadow(2px 4px 8px rgba(0,0,0,.8))}
+
+#statusbar{text-align:center;font-size:.8rem;color:var(--mu);height:18px;margin-top:3px}
+
+/* Mobile move list */
+.mmwrap{display:none;width:100%;margin-top:5px}
+@media(max-width:800px){.mmwrap{display:block}}
+.mmlist{max-height:50px;overflow-y:auto;font-size:.72rem;background:var(--surf);border-radius:8px;padding:5px;border:1px solid var(--br)}
+
+/* MODALS */
+.mbg{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.82);align-items:center;justify-content:center;padding:16px}
+.mbg.show{display:flex}
+.mbox{background:var(--surf);border:2px solid var(--acc);border-radius:18px;padding:clamp(18px,5vw,36px) clamp(18px,6vw,46px);width:min(400px,96vw);box-shadow:0 0 50px rgba(0,0,0,.6)}
+.mbox h2{font-family:'Cinzel',serif;font-size:1.15rem;letter-spacing:3px;margin-bottom:18px}
+.mbox h3{font-family:'Cinzel',serif;font-size:.88rem;letter-spacing:2px;margin-bottom:14px}
+.ppieces{display:flex;gap:10px;justify-content:center}
+.pp{width:54px;height:54px;border-radius:10px;background:var(--bb);border:2px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:1.9rem;cursor:pointer;transition:all .2s}
+.pp:hover{border-color:var(--acc);transform:scale(1.1)}
+.ricon{font-size:3.2rem;margin-bottom:7px}
+.rtitle{font-family:'Cinzel',serif;font-size:1.5rem;font-weight:900;margin-bottom:5px}
+.rsub{color:var(--mu);font-size:.9rem;margin-bottom:18px}
+.rbtns{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}
+.rbtns .mbtn{min-width:120px;margin:0}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--br)}
+.slbl{font-size:.93rem;font-weight:600}
+.ssub{font-size:.73rem;color:var(--mu);margin-top:2px}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--br);border:none;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--acc)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on::after{left:23px}
+.sbtn2{padding:6px 13px;border-radius:8px;border:1px solid var(--br);background:var(--bb);color:var(--tx);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.8rem;font-weight:600;transition:all .2s}
+.sbtn2:hover{border-color:var(--acc)}
+.sclose{margin-top:16px;width:100%}
+.credits-box{text-align:center}
+.citem{margin-bottom:14px}
+.crole{font-size:.66rem;letter-spacing:4px;color:var(--mu);text-transform:uppercase}
+.cname{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:var(--acc)}
+.cdetail{font-size:.76rem;color:var(--mu);margin-top:2px}
+.csep{border:none;border-top:1px solid var(--br);margin:12px 0}
+.tdot{display:inline-block;animation:td 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.2s}
+.tdot:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{opacity:.2}40%{opacity:1}}
+</style>
+</head>
+<body class="ocean">
+<div id="ptcl"></div>
+<div id="drag-ghost"></div>
+
+<!-- MENU -->
+<div id="menu" class="scr">
+  <div class="logo">
+    <span class="logo-icon">♛</span>
+    <div class="logo-title">64 KARE SATRANÇ</div>
+    <div class="logo-sub">PCMekası Edition</div>
+    <div class="fpsbadge-menu" id="fpsbadge-menu">FPS: --</div>
+  </div>
+  <div class="mcard">
+    <div class="msec">
+      <h3>Oyun Modu</h3>
+      <button class="mbtn pri" onclick="pickMode('local')">⚔️ &nbsp;Lokal — 2 Oyuncu</button>
+      <button class="mbtn pri" onclick="pickMode('bot')">🤖 &nbsp;Bot — Yapay Zeka</button>
+    </div>
+    <div class="msec" id="bot-sec" style="display:none">
+      <h3>Renk Seç (Bot Modu)</h3>
+      <div class="cpick">
+        <button class="cbtn active" id="bc-w" onclick="setBotColor('black')"><div class="cdot" style="background:#f0d9b5;border:1px solid #aaa"></div>Beyaz Oyna</button>
+        <button class="cbtn" id="bc-b" onclick="setBotColor('white')"><div class="cdot" style="background:#222;border:1px solid #666"></div>Siyah Oyna</button>
+      </div>
+    </div>
+
+    <div class="msec">
+      <h3>Süre</h3>
+      <div class="diff-row">
+        <button class="diff-btn" id="time-inf" onclick="setTimeMode('inf')">∞<br>Süresiz</button>
+        <button class="diff-btn active" id="time-10" onclick="setTimeMode('10')">10<br>Dakika</button>
+        <button class="diff-btn" id="time-5" onclick="setTimeMode('5')">5<br>Dakika</button>
+        <button class="diff-btn" id="time-3" onclick="setTimeMode('3')">3<br>Dakika</button>
+      </div>
+    </div>
+    <div class="msec">
+      <h3>Tema</h3>
+      <div class="cpick">
+        <button class="cbtn active" id="t-ocean" onclick="setTheme('ocean')"><div class="cdot" style="background:#0ea5e9"></div>Okyanus</button>
+        <button class="cbtn" id="t-brown" onclick="setTheme('brown')"><div class="cdot" style="background:#d97706"></div>Kahve</button>
+        <button class="cbtn" id="t-white" onclick="setTheme('white')"><div class="cdot" style="background:#6366f1"></div>Beyaz</button>
+        <button class="cbtn" id="t-black" onclick="setTheme('black')"><div class="cdot" style="background:#00ff88"></div>Siyah</button>
+      </div>
+    </div>
+    <div class="mrow">
+      <button class="mbtn sec" onclick="openSettings()">⚙️ Ayarlar</button>
+      <button class="mbtn sec" onclick="openCredits()">👤 Yapımcılar</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" class="scr" style="display:none">
+  <div class="hud">
+    <button class="hbtn" onclick="goMenu()">← Menü</button>
+    <button class="hbtn" onclick="undoMove()">↩ Geri</button>
+    <div class="tbadge" id="tbadge">⬜ Beyazın Hamlesi</div>
+    <button class="hbtn" onclick="openSettings()">⚙️</button>
+    <div class="fpsbadge" id="fpsbadge">FPS: --</div>
+  </div>
+  <div class="garea">
+    <!-- Left panel -->
+    <div class="spanel">
+      <div class="pcard">
+        <div class="pinfo"><div class="pav" id="d-tav">♟</div><div><div class="pname" id="d-tn">Siyah</div><div class="prat" id="d-tr">—</div></div></div>
+        <div class="ptimer" id="d-tb">10:00</div>
+      </div>
+      <div class="pcard"><h4>Alınan Taşlar</h4><div class="capt-row" id="d-cb"></div></div>
+    </div>
+    <!-- Board -->
+    <div class="bcenter">
+      <div class="mstrip" id="mst-top">
+        <div class="mpleft"><div class="pav" id="m-tav" style="width:26px;height:26px;font-size:.85rem">♟</div><div><div class="mpname" id="m-tn">Siyah</div><div class="mprat" id="m-tr">—</div></div></div>
+        <div class="mptimer" id="m-tb">10:00</div>
+      </div>
+      <div class="bwrap">
+        <div class="rlabels" id="rlabels"></div>
+        <div>
+          <div id="board"></div>
+          <div class="flabels" id="flabels"></div>
+        </div>
+      </div>
+      <div id="statusbar"></div>
+      <div class="mstrip bot" id="mst-bot">
+        <div class="mpleft"><div class="pav" id="m-bav" style="width:26px;height:26px;font-size:.85rem">♙</div><div><div class="mpname" id="m-bn">Beyaz</div><div class="mprat" id="m-br">—</div></div></div>
+        <div class="mptimer" id="m-tw">10:00</div>
+      </div>
+      <div class="mmwrap"><div class="mmlist" id="m-ml"></div></div>
+    </div>
+    <!-- Right panel -->
+    <div class="spanel">
+      <div class="pcard">
+        <div class="pinfo"><div class="pav" id="d-bav">♙</div><div><div class="pname" id="d-bn">Beyaz</div><div class="prat" id="d-br">—</div></div></div>
+        <div class="ptimer" id="d-tw">10:00</div>
+      </div>
+      <div class="pcard"><h4>Alınan Taşlar</h4><div class="capt-row" id="d-cw"></div></div>
+      <div class="pcard"><h4>Hamleler</h4><div class="movelist" id="d-ml"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROMO -->
+<div class="mbg" id="promo-modal">
+  <div class="mbox" style="text-align:center">
+    <h3>TERFİ — Taş Seç</h3>
+    <div class="ppieces" id="promo-pieces"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="mbg" id="result-modal">
+  <div class="mbox" style="text-align:center">
+    <div class="ricon" id="ricon">♛</div>
+    <div class="rtitle" id="rtitle">Oyun Bitti</div>
+    <div class="rsub" id="rsub">—</div>
+    <div class="rbtns">
+      <button class="mbtn pri" onclick="restartGame()">🔄 Yeniden</button>
+      <button class="mbtn sec" onclick="goMenu()">🏠 Menü</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="mbg" id="settings-modal">
+  <div class="mbox">
+    <h2>⚙ AYARLAR</h2>
+    <div class="srow">
+      <div><div class="slbl">Ses</div><div class="ssub">Hamle ve yeme sesleri</div></div>
+      <button class="toggle on" id="tog-s" onclick="togSet('sound')"></button>
+    </div>
+    <div class="srow">
+      <div><div class="slbl">FPS Sayacı</div><div class="ssub">1 sn'de bir güncellenir</div></div>
+      <button class="toggle" id="tog-f" onclick="togSet('fps')"></button>
+    </div>
+    <div class="srow">
+      <div><div class="slbl">Taş Hareketi</div><div class="ssub" id="mmlbl">Tıklayarak</div></div>
+      <button class="sbtn2" onclick="togMM()">Değiştir</button>
+    </div>
+    <div class="srow">
+      <div><div class="slbl">Lokal: Siyah Ters Taş</div><div class="ssub">Siyah sırasında taşlar 180° döner</div></div>
+      <button class="toggle" id="tog-flip" onclick="togSet('flip')"></button>
+    </div>
+    <button class="mbtn sec sclose" onclick="closeSettings()">Kapat</button>
+  </div>
+</div>
+
+<!-- CREDITS -->
+<div class="mbg" id="credits-modal">
+  <div class="mbox credits-box">
+    <h2>YAPIMCILAR</h2>
+    <div class="citem">
+      <div class="crole">Tasarım &amp; Geliştirici</div>
+      <div class="cname">PCMekası</div>
+      <div class="cdetail">Ana geliştirici · Proje sahibi</div>
+    </div>
+    <div class="citem">
+      <div class="crole">Yapay Zeka Asistanı</div>
+      <div class="cname">Claude</div>
+      <div class="cdetail">Anthropic tarafından geliştirildi</div>
+    </div>
+    <hr class="csep">
+    <div style="font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:3px;color:var(--mu);margin-bottom:12px;text-transform:uppercase">Testçiler</div>
+    <div class="citem">
+      <div class="crole">Beta Tester</div>
+      <div class="cname">Şükrü</div>
+      <div class="cdetail">Hata tespiti &amp; geri bildirim</div>
+    </div>
+    <div class="citem">
+      <div class="crole">Beta Tester</div>
+      <div class="cname">Kaan</div>
+      <div class="cdetail">Hata tespiti &amp; geri bildirim</div>
+    </div>
+    <hr class="csep">
+    <div class="citem" style="margin-bottom:0">
+      <div class="crole">Satranç Motoru</div>
+      <div class="cname" style="font-size:.95rem">Alpha-Beta Budama</div>
+      <div class="cdetail">Derinlik: 4</div>
+    </div>
+    <button class="mbtn sec" style="margin-top:16px" onclick="closeCredits()">Kapat</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════
