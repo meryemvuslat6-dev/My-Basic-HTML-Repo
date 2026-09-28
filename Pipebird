@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>PipeBird</title>
+<style>
+:root {
+  --bg: #70c5ce;
+  --ground: #ded895;
+  --pipe: #2ecc71;
+  --pipe-dark: #27ae60;
+  --text: #ffffff;
+  --shadow: rgba(0,0,0,0.2);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  touch-action: manipulation; overscroll-behavior: none;
+  background: linear-gradient(#5bc0eb, var(--bg));
+  -webkit-tap-highlight-color: transparent;
+}
+.wrap { height: 100%; display: grid; place-items: center; padding: 8px; position: relative; }
+canvas {
+  background: var(--bg);
+  box-shadow: 0 12px 30px var(--shadow);
+  border-radius: 12px;
+  width: 100%; max-width: 480px; height: auto;
+  aspect-ratio: 3/4; touch-action: none;
+}
+.hud, .menu, .credits {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  color: var(--text); text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  font-weight: 700; letter-spacing: 0.5px; user-select: none; text-align: center;
+}
+.hud { top: 16px; pointer-events: none; font-size: 20px; }
+.hud small { display: block; font-weight: 500; opacity: 0.9; font-size: 15px; }
+.hint {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.25); padding: 10px 16px; border-radius: 999px;
+  color: #fff; font-size: 16px; text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+/* Ana menü ve alt menüler için optimizasyon */
+.menu, .credits {
+  top: 50%; 
+  transform: translate(-50%, -50%); /* Dikeyde tam ortalandı */
+  background: rgba(0,0,0,0.8); 
+  padding: 30px 20px; /* Padding azaltıldı */
+  border-radius: 24px;
+  backdrop-filter: blur(5px); 
+  font-size: 28px;
+  max-width: 90%;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.menu h1, .menu h2 {
+  margin: 0 0 20px 0;
+  font-size: 32px;
+}
+.menu button {
+  margin: 8px 0; /* Dikey boşluk azaltıldı */
+  padding: 0; /* Padding sıfırlandı */
+  font-size: 20px; /* Yazı biraz küçültüldü */
+  border-radius: 14px;
+  border: none; 
+  background: rgba(255,255,255,0.2); 
+  color: #fff;
+  cursor: pointer; 
+  width: 240px; 
+  height: 76px; /* Tam 2 cm yükseklik (76px ≈ 2cm) */
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu button:hover { background: rgba(255,255,255,0.3); }
+
+.game-over-panel {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.8); padding: 40px; border-radius: 20px;
+  text-align: center; color: white; z-index: 100; min-width: 280px;
+  font-size: 24px;
+}
+.game-over-panel button {
+  margin: 14px; padding: 12px 28px; border: none; border-radius: 10px;
+  background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 20px;
+}
+.game-over-panel button:hover { background: rgba(255,255,255,0.3); }
+
+.sound-btn, .language-btn {
+  position: fixed; 
+  top: 16px; 
+  background: rgba(0,0,0,0.3);
+  border: none; 
+  border-radius: 50%; 
+  width: 44px; 
+  height: 44px;
+  color: white; 
+  cursor: pointer; 
+  z-index: 1000; 
+  font-size: 22px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+}
+.sound-btn { 
+  right: 16px; 
+  font-size: 20px; 
+}
+.language-btn { 
+  left: 16px; 
+}
+
+.fps-indicator {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  background: rgba(0,0,0,0.3);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 1000;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  user-select: none;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="game" width="360" height="480" tabindex="0"></canvas>
+</div>
+
+<div class="hud" id="hud">
+  <div id="score">Score: 0</div>
+  <small id="instructions">Tap or click: Jump</small>
+</div>
+<div class="hint" id="hintText">Tap / click: jump</div>
+
+<div class="fps-indicator" id="fpsIndicator" style="display:none;">FPS: 0</div>
+
+<div class="menu" id="menu">
+  <h1 id="gameTitle">PipeBird</h1>
+  <button id="startBtn">Start</button>
+  <button id="difficultyBtn">Difficulty</button>
+  <button id="birdSelectBtn">Choose Bird</button>
+  <button id="settingsBtn">Settings</button>
+  <button id="creditsBtn">Credits</button>
+</div>
+
+<div class="menu" id="difficultySelect" style="display:none;">
+  <h2 id="difficultyTitle">Difficulty Level</h2>
+  <button data-difficulty="easy">Easy</button>
+  <button data-difficulty="medium">Normal</button>
+  <button data-difficulty="hard">Hard</button>
+  <button data-difficulty="veryhard">Very Hard</button>
+  <button id="backBtn3">Back</button>
+</div>
+
+<div class="menu" id="birdSelect" style="display:none;">
+  <h2 id="birdTitle">Choose Bird Color</h2>
+  <button data-color="#ffd54f">Yellow</button>
+  <button data-color="#f44336">Red</button>
+  <button data-color="#2196f3">Blue</button>
+  <button data-color="#bbbbbb">Light Gray</button>
+  <button id="backBtn1">Back</button>
+</div>
+
+<div class="menu" id="settingsSelect" style="display:none;">
+  <h2 id="settingsTitle">Settings</h2>
+  <button data-fps="60" id="fps60Btn">60 FPS</button>
+  <button data-fps="120" id="fps120Btn">120 FPS</button>
+  <button id="fpsToggleBtn">FPS: Off</button>
+  <button id="soundBtn">🔊</button>
+  <button id="languageBtn">🇹🇷</button>
+  <button id="backBtn4">Back</button>
+</div>
+
+<div class="credits" id="credits" style="display:none;">
+  <h2 id="creditsTitle">Creator</h2>
+  <p>PCMekası</p>
+  <p><a href="https://pcmekasi.blogspot.com" style="color:#70c5ce; text-decoration:none;">pcmekasi.blogspot.com</a></p>
+  <p><a href="https://youtube.com/@PCMekasiOffical" style="color:#70c5ce; text-decoration:none;">youtube.com/@PCMekasiOffical</a></p>
+  <button id="backBtn2">Back</button>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  let scale = 1;
+
+  function fitCanvas(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight;
+    canvas.width = cssW * dpr;
+    canvas.height = cssH * dpr;
+    scale = dpr;
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
+
+  let GRAVITY = 0.35, FLAP = -6.5, PIPE_SPEED = 2;
+  const PIPE_GAP_BASE = 120, PIPE_GAP_VARIANCE = 40, PIPE_INTERVAL = 90;
+  const GROUND_H = 56;
+
+  let bird, pipes = [], score = 0, best = localStorage.getItem('boruluBest') || 0;
+  best = Number(best);
+  let frame = 0, running = false, started = false, birdColor = "#ffd54f";
+  let gameOverPanel = null, gameOverActive = false, soundEnabled = true;
+  let currentLanguage = 'tr';
+  let FPS_LIMIT = Number(localStorage.getItem('boruluFps')) || 60, lastFrameTime = 0;
+  let showFps = localStorage.getItem('boruluShowFps') === 'true';
+  let fpsFrames = 0, lastFpsUpdate = 0, currentFps = 0;
+  let wingFrame = 0; 
+
+  const clouds = [{x:50,y:50,s:1.2,v:0.3},{x:250,y:80,s:0.9,v:0.2},{x:150,y:120,s:1,v:0.25}];
+
+  const translations = {
+    tr: { title: "BoruluBörd", start: "Başlat", difficulty: "Zorluk", bird: "Kuş Seç", credits: "Yapımcılar", easy: "Kolay", medium: "Orta", hard: "Zor", veryhard: "Çok Zor", back: "Geri", gameOver: "Oyun Bitti!", yourScore: "Skor", bestScore: "En İyi", restart: "Yeniden Başlat", menu: "Ana Menü", hint: "Dokun / tıkla: zıpla", instructions: "Dokun veya tıkla: Zıpla", settings: "Ayarlar", fpsShow: "FPS Göstergesi", on: "Açık", off: "Kapalı" },
+    en: { title: "PipeBird", start: "Start", difficulty: "Difficulty", bird: "Choose Bird", credits: "Credits", easy: "Easy", medium: "Normal", hard: "Hard", veryhard: "Very Hard", back: "Back", gameOver: "Game Over!", yourScore: "Score", bestScore: "Best", restart: "Restart", menu: "Main Menu", hint: "Tap / click: jump", instructions: "Tap or click: Jump", settings: "Settings", fpsShow: "FPS Display", on: "On", off: "Off" },
+    ru: { title: "Трубоптах", start: "Играть", difficulty: "Сложность", bird: "Выбор птицы", credits: "Создатель", easy: "Легко", medium: "Норма", hard: "Тяжело", veryhard: "Очень тяжело", back: "Назад", gameOver: "Игра окончена!", yourScore: "Счёт", bestScore: "Рекорд", restart: "Заново", menu: "Меню", hint: "Коснись / клик: прыжок", instructions: "Коснись или кликни: прыгай", settings: "Настройки", fpsShow: "Показ FPS", on: "Вкл", off: "Выкл" }
+  };
+
+  const flagMap = {
+    en: '🇬🇧',
+    tr: '🇹🇷',
+    ru: '🇷🇺'
+  };
+
+  function t(key){ return translations[currentLanguage][key] || key; }
+
+  function updateTexts(){
+    document.getElementById('gameTitle').textContent = t('title');
+    document.getElementById('startBtn').textContent = t('start');
+    document.getElementById('difficultyBtn').textContent = t('difficulty');
+    document.getElementById('birdSelectBtn').textContent = t('bird');
+    document.getElementById('creditsBtn').textContent = t('credits');
+    document.getElementById('settingsBtn').textContent = t('settings');
+    document.getElementById('settingsTitle').textContent = t('settings');
+    document.getElementById('fpsToggleBtn').textContent = t('fpsShow') + ': ' + (showFps ? t('on') : t('off'));
+    document.getElementById('backBtn4').textContent = t('back');
+    document.getElementById('difficultyTitle').textContent = t('difficulty');
+    document.querySelector('[data-difficulty="easy"]').textContent = t('easy');
+    document.querySelector('[data-difficulty="medium"]').textContent = t('medium');
+    document.querySelector('[data-difficulty="hard"]').textContent = t('hard');
+    document.querySelector('[data-difficulty="veryhard"]').textContent = t('veryhard');
+    document.getElementById('backBtn3').textContent = document.getElementById('backBtn1').textContent = document.getElementById('backBtn2').textContent = t('back');
+    document.getElementById('birdTitle').textContent = t('bird');
+    document.getElementById('creditsTitle').textContent = t('credits');
+    document.getElementById('hintText').textContent = t('hint');
+    document.getElementById('instructions').textContent = t('instructions');
+  }
+
+  function changeLanguage(){
+    const langs = ['en', 'tr', 'ru'];
+    const idx = langs.indexOf(currentLanguage);
+    currentLanguage = langs[(idx + 1) % langs.length];
+    document.getElementById('languageBtn').textContent = flagMap[currentLanguage];
+    updateTexts();
+  }
+
+  function setDifficulty(diff){
+    if(diff==='easy'){
+      GRAVITY=0.28; FLAP=-6; PIPE_SPEED=1.7; 
+    } else if(diff==='hard'){
+      GRAVITY=0.45; FLAP=-7.5; PIPE_SPEED=2.7; 
+    } else if(diff==='veryhard'){
+      GRAVITY=0.55; FLAP=-7.0; PIPE_SPEED=3.2;
+    } else {
+      GRAVITY=0.35; FLAP=-6.5; PIPE_SPEED=2; 
+    }
+  }
+
+  const beep = (() => {
+    let ctx;
+    return (freq=880, dur=0.06) => {
+      if(!soundEnabled) return;
+      try{
+        ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type='sine'; o.frequency.value=freq; g.gain.value=0.1;
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); setTimeout(()=>o.stop(), dur*1000);
+      }catch(e){}
+    };
+  })();
+
+  function reset(){
+    bird = {x: canvas.width*0.25, y: canvas.height*0.5, vy:0, r:12*scale};
+    pipes = []; score = 0; frame = 0; 
+    running = false; started = false; gameOverActive = false; wingFrame = 0;
+    if(gameOverPanel){ gameOverPanel.remove(); gameOverPanel=null; }
+    document.getElementById('score').textContent = 'Score: 0';
+    draw();
+  }
+
+  function flap(){
+    if(gameOverActive) return;
+    if(!started) {
+      started = true;
+      running = true; 
+    }
+    bird.vy = FLAP * scale;
+    wingFrame = 15;
+    beep(880,0.06);
+  }
+
+  function bindInput(){
+    const press = e => { e.preventDefault(); flap(); };
+    canvas.addEventListener('pointerdown', press, {passive:false});
+    canvas.addEventListener('touchstart', press, {passive:false});
+    canvas.addEventListener('mousedown', press);
+    window.addEventListener('keydown', e => {
+      if(e.code==='Space' || e.code==='ArrowUp'){ e.preventDefault(); flap(); }
+    });
+  }
+  bindInput();
+
+  function drawBackground(){
+    ctx.fillStyle = '#70c5ce'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    clouds.forEach(c=>{ ctx.beginPath();
+      ctx.arc(c.x,c.y,12*c.s,0,Math.PI*2);
+      ctx.arc(c.x+16*c.s,c.y+4*c.s,14*c.s,0,Math.PI*2);
+      ctx.arc(c.x+32*c.s,c.y,12*c.s,0,Math.PI*2);
+      ctx.fill();
+      c.x += c.v; if(c.x > canvas.width+50) c.x = -50;
+    });
+    ctx.fillStyle = '#ded895';
+    ctx.fillRect(0,canvas.height-GROUND_H*scale,canvas.width,GROUND_H*scale);
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    for(let x=0;x<canvas.width;x+=18*scale) ctx.fillRect(x,canvas.height-GROUND_H*scale,9*scale,GROUND_H*scale);
+  }
+
+  function drawBird(){
+    const {x,y,r} = bird;
+    ctx.save(); ctx.translate(x,y);
+    ctx.rotate(Math.max(-0.5, Math.min(0.6, bird.vy/(10*scale)))); 
+
+    const wingAngle = wingFrame > 0 ? Math.sin(wingFrame * 0.8) * 1.0 : 0; 
+    wingFrame = Math.max(0, wingFrame - 1);
+
+    ctx.fillStyle = birdColor;
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle = birdColor;
+    ctx.save();
+    ctx.rotate(wingAngle);
+    ctx.beginPath();
+    ctx.ellipse(-r*0.4, 0, r*0.9, r*0.5, 0.3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.rotate(-wingAngle*1.2);
+    ctx.beginPath();
+    ctx.ellipse(-r*0.4, 0, r*0.9, r*0.5, -0.3, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = '#ffca28';
+    ctx.beginPath(); ctx.ellipse(-r*0.2,r*0.15,r*0.6,r*0.35,-0.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(r*0.35,-r*0.2,r*0.28,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(r*0.45,-r*0.2,r*0.12,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#ff8f00'; ctx.beginPath(); ctx.moveTo(r*0.8,0); ctx.lineTo(r*1.1,-r*0.1); ctx.lineTo(r*1.1,r*0.1); ctx.closePath(); ctx.fill();
+
+    ctx.restore();
+  }
+
+  function addPipe(){
+    const gap = (PIPE_GAP_BASE + Math.random()*PIPE_GAP_VARIANCE)*scale;
+    const topH = Math.max(20*scale, Math.random()*(canvas.height-GROUND_H*scale-gap-40*scale));
+    const bottomY = topH + gap;
+    const w = 52*scale;
+    pipes.push({x:canvas.width+w, w, topH, bottomY, passed:false});
+  }
+
+  function drawPipes(){
+    pipes.forEach(p=>{
+      ctx.fillStyle='#27ae60'; ctx.fillRect(p.x,0,p.w,p.topH);
+      ctx.fillStyle='#2ecc71'; ctx.fillRect(p.x+4*scale,0,p.w-8*scale,p.topH);
+      ctx.fillStyle='#1e8e4f'; ctx.fillRect(p.x-2*scale,p.topH-10*scale,p.w+4*scale,12*scale);
+      ctx.fillStyle='#27ae60'; ctx.fillRect(p.x,p.bottomY,p.w,canvas.height-p.bottomY-GROUND_H*scale);
+      ctx.fillStyle='#2ecc71'; ctx.fillRect(p.x+4*scale,p.bottomY,p.w-8*scale,canvas.height-p.bottomY-GROUND_H*scale);
+      ctx.fillStyle='#1e8e4f'; ctx.fillRect(p.x-2*scale,p.bottomY,p.w+4*scale,12*scale);
+    });
+  }
+
+  function collideRectCircle(rx,ry,rw,rh,cx,cy,cr){
+    const nx = Math.max(rx, Math.min(cx, rx+rw));
+    const ny = Math.max(ry, Math.min(cy, ry+rh));
+    const dx = cx-nx, dy=cy-ny;
+    return dx*dx + dy*dy < cr*cr;
+  }
+
+  function update(){
+    if(!running) return;
+    frame++;
+    bird.vy += GRAVITY*scale;
+    bird.y += bird.vy;
+    if(frame % PIPE_INTERVAL === 0) addPipe();
+    pipes.forEach(p=>{
+      p.x -= PIPE_SPEED*scale;
+      if(!p.passed && p.x + p.w < bird.x){
+        p.passed=true; score++; 
+        document.getElementById('score').textContent = 'Score: '+score;
+        beep(700,0.05);
+      }
+    });
+    pipes = pipes.filter(p=>p.x + p.w > 0);
+
+    const groundY = canvas.height - GROUND_H*scale;
+    if(bird.y + bird.r > groundY || bird.y - bird.r < 0) gameOver();
+    for(const p of pipes){
+      if(collideRectCircle(p.x,0,p.w,p.topH,bird.x,bird.y,bird.r) ||
+         collideRectCircle(p.x,p.bottomY,p.w,groundY-p.bottomY,bird.x,bird.y,bird.r)){
+        gameOver(); break;
+      }
+    }
+  }
+
+  function gameOver(){
+    running = false; gameOverActive = true;
+    beep(250,0.3);
+    if(score > best){
+      best = score;
+      localStorage.setItem('boruluBest', best);
+    }
+    gameOverPanel = document.createElement('div');
+    gameOverPanel.className = 'game-over-panel';
+    gameOverPanel.innerHTML = `
+      <h2>${t('gameOver')}</h2>
+      <p>${t('yourScore')}: ${score}</p>
+      <p>${t('bestScore')}: ${best}</p>
+      <button id="restartBtn">${t('restart')}</button>
+      <button id="menuBtn">${t('menu')}</button>
+    `;
+    document.querySelector('.wrap').appendChild(gameOverPanel);
+
+    document.getElementById('restartBtn').onclick = () => { gameOverPanel.remove(); reset(); running = true; started = true; };
+    document.getElementById('menuBtn').onclick = () => { gameOverPanel.remove(); reset(); document.getElementById('menu').style.display = 'flex'; document.getElementById('hintText').style.display = 'none'; };
+  }
+
+  function drawHUD(){
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.font = `${22*scale}px system-ui`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`Score: ${score}`, 12*scale, 32*scale);
+    if(best>0){
+      ctx.textAlign = 'right';
+      ctx.fillText(`Best: ${best}`, canvas.width-12*scale, 32*scale);
+    }
+  }
+
+  function draw(){ drawBackground(); drawPipes(); drawBird(); drawHUD(); }
+
+  function loop(now){
+    requestAnimationFrame(loop);
+    if(now === undefined) now = performance.now();
+    const interval = 1000 / FPS_LIMIT;
+    const elapsed = now - lastFrameTime;
+    if(elapsed < interval) return;
+    lastFrameTime = now - (elapsed % interval);
+    update();
+    draw();
+
+    fpsFrames++;
+    if(now - lastFpsUpdate >= 1000){
+      currentFps = fpsFrames;
+      fpsFrames = 0;
+      lastFpsUpdate = now;
+      if(showFps) document.getElementById('fpsIndicator').textContent = 'FPS: ' + currentFps;
+    }
+  }
+
+  document.getElementById('soundBtn').onclick = () => {
+    soundEnabled = !soundEnabled;
+    document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+  };
+  document.getElementById('languageBtn').onclick = changeLanguage;
+  document.getElementById('fpsToggleBtn').onclick = () => {
+    showFps = !showFps;
+    localStorage.setItem('boruluShowFps', showFps);
+    document.getElementById('fpsIndicator').style.display = showFps ? 'block' : 'none';
+    document.getElementById('fpsToggleBtn').textContent = t('fpsShow') + ': ' + (showFps ? t('on') : t('off'));
+  };
+
+  document.getElementById('startBtn').onclick = () => {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('hintText').style.display = 'block';
+    reset(); 
+  };
+
+  document.getElementById('difficultyBtn').onclick = () => { document.getElementById('menu').style.display = 'none'; document.getElementById('difficultySelect').style.display = 'flex'; };
+  document.getElementById('birdSelectBtn').onclick = () => { document.getElementById('menu').style.display = 'none'; document.getElementById('birdSelect').style.display = 'flex'; };
+  document.getElementById('settingsBtn').onclick = () => { document.getElementById('menu').style.display = 'none'; document.getElementById('settingsSelect').style.display = 'flex'; };
+  document.getElementById('creditsBtn').onclick = () => { document.getElementById('menu').style.display = 'none'; document.getElementById('credits').style.display = 'flex'; };
+
+  document.querySelectorAll('#backBtn1,#backBtn2,#backBtn3,#backBtn4').forEach(b=>b.onclick = () => {
+    document.querySelectorAll('.menu, .credits').forEach(m=>m.style.display='none');
+    document.getElementById('menu').style.display='flex';
+  });
+
+  document.querySelectorAll('[data-difficulty]').forEach(b=>b.onclick = e=>{
+    setDifficulty(e.target.dataset.difficulty);
+    document.getElementById('difficultySelect').style.display='none';
+    document.getElementById('menu').style.display='flex';
+  });
+
+  document.querySelectorAll('[data-fps]').forEach(b=>b.onclick = e=>{
+    FPS_LIMIT = Number(e.target.dataset.fps
